@@ -7,34 +7,48 @@ window.addEventListener('load', async () => {
   let date = new Date(); // получаем текушюю дату 
   let dayWeek = date.getDay();
   // dayWeek = 2;
-  // console.log(dayWeek)
-  date.setDate(date.getDate() - dayWeek + 1);
-  const currentDay = dayWeek === 0 ? 6 : dayWeek - 1;
-  // console.log("currentDay = " + currentDay);
+  console.log(dayWeek)
+  console.log(date);
+  // date.setDate(date.getDate() - dayWeek + 1);
   // console.log(date)
+
+  let currentDay = dayWeek === 0 ? 6 : dayWeek - 1;
+  console.log("currentDay = " + currentDay);
+  
+  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
   // date.setDate(date.getDate() - 1);
   // console.log(date)
 
-  const pageNavDayNumber = document.querySelectorAll(".page-nav__day-number");
+  const pageNavDayNumber = document.querySelectorAll(".page-nav__day-number"); // раставляем даты 
 
   for (let i = 0; i < pageNavDayNumber.length; i++) {
-    let time = date.getDate()
+    const time = date.getDate()
     pageNavDayNumber[i].innerHTML = time;
-    date.setDate(date.getDate() + 1)
+    date.setDate(date.getDate() + 1) // переходим на следующий день
     // console.log(date);
   }
 
+  const pageNavDayWeek = document.querySelectorAll(".page-nav__day-week"); // раставляем дни недели
+
+  for (let i = 0; i < 7 - currentDay; i++) {
+    pageNavDayWeek[i].innerHTML = days[i + currentDay];
+  }
+  for (let i = 7 - currentDay; i < 7; i++) {
+    pageNavDayWeek[i].innerHTML = days[i - (7 - currentDay)];
+  }
+  currentDay = 0;
   const time = date.getDate();
   // console.log(time);
 
 
 
-  document.querySelector('.page-nav__day_today').classList.remove('page-nav__day_today')
+  // document.querySelector('.page-nav__day_today').classList.remove('page-nav__day_today')
+  
   const pageNavDay = document.querySelectorAll('.page-nav__day');
 
   document.querySelector('.page-nav__day_chosen').classList.remove('page-nav__day_chosen');
-  pageNavDay[currentDay].classList.add('page-nav__day_chosen');
-  pageNavDay[currentDay].classList.add('page-nav__day_today');
+  pageNavDay[0].classList.add('page-nav__day_chosen');
+  // pageNavDay[currentDay].classList.add('page-nav__day_today');
 
   const daySelected = (i) => {
     document.querySelector('.page-nav__day_chosen').classList.remove('page-nav__day_chosen')
@@ -46,10 +60,11 @@ window.addEventListener('load', async () => {
       let selectedDate = new Date(); // для покупок в будующем
       selectedDate.setDate(selectedDate.getDate() + diff); // к текущему дню мы добавляем разность между текущим и планируемым
       selectedDate.setHours(0, 0, 0) // обнуляем на начало дня 
-      console.log(selectedDate);
+      // console.log(selectedDate);
+      seanceDate = selectedDate.toLocaleDateString(); // дата фильма для билета
       selectedDate = Math.trunc(selectedDate / 1000);
 
-      film(selectedDate)
+      film(selectedDate, seanceDate)
   }
 
   let selectedWeekDay = -1; // currentDay
@@ -57,7 +72,7 @@ window.addEventListener('load', async () => {
     pageNavDay[i].onclick = () => daySelected(i) // 
   }
 
-  function film(selectedDate) {
+  function film(selectedDate, seanceDate) {
     let main = document.querySelector('main')
     main.innerHTML = '';
 
@@ -83,7 +98,7 @@ window.addEventListener('load', async () => {
             </div> 
           </div>  
           `
-      halls(section, films[i].film_id, selectedDate)
+      halls(section, films[i].film_id, selectedDate, seanceDate)
       deleteEmptyHalls(section)
     }
   }
@@ -96,9 +111,9 @@ window.addEventListener('load', async () => {
 
   // film(selectedDate)
 
-  daySelected(currentDay)
+  daySelected(0)
 
-  function halls(section, filmId, selectedDate) {
+  function halls(section, filmId, selectedDate, seanceDate) {
     let halls = result.halls.result;
     for (let j = 0; j < halls.length; j++) { // проходим по обьектам зала 
       // console.log(halls[j].hall_name) // обращаемся к имени зала и встявляем его в разметку 
@@ -116,12 +131,13 @@ window.addEventListener('load', async () => {
       seancesList.classList.add("movie-seances__list")
       hallId.appendChild(seancesList)
       // seancesList.innerHTML = ``;
-      seances(seancesList, halls[j].hall_id, filmId, selectedDate)
+      seances(seancesList, halls[j].hall_id, filmId, selectedDate, seanceDate)
     }
 
   }
 
-  function seances(seancesList, hall_id, film_id, selectedDate) {
+  function seances(seancesList, hall_id, film_id, selectedDate, seanceDate) {
+    
     let seances = result.seances.result; // проходим по обьектам сеанса и добавляем время
     for (let a = 0; a < seances.length; a++) {
       if (seances[a].seance_hallid === hall_id && film_id === seances[a].seance_filmid) {
@@ -138,8 +154,8 @@ window.addEventListener('load', async () => {
         const aTime = document.createElement("a")
         aTime.classList.add("movie-seances__time")
         const date = new Date();
-        const hhMm = date.getHours() + ":" + date.getMinutes();
-        // console.log(hhMm); 
+        const hhMm = ("" + date.getHours()).padStart(2,"0") + ":" + ("" +date.getMinutes()).padStart(2,"0");
+        // console.log(date); 
         // надо обратиться к дате которая указана в разметке а это 
         if (currentDay === selectedWeekDay) {
           if (seances[a].seance_time <= hhMm) {
@@ -149,8 +165,9 @@ window.addEventListener('load', async () => {
           aTime.classList.add("acceptin-button-disabled"); // добавляем класс не действительного сеанса 
         }
         seanceTimeStamp = (seances[a].seance_start * 60) + selectedDate; // обнулены день в будующем мы добавляем начало сеанса 
-        // console.log(selectedDate)
-        aTime.setAttribute("href", "hall.html?hall_id=" + hall_id + "&seance_id=" + seances[a].seance_id + "&seanceTimeStamp=" + seanceTimeStamp + "&film_id=" + film_id)
+        
+      
+        aTime.setAttribute("href", "hall.html?hall_id=" + hall_id + "&seance_id=" + seances[a].seance_id + "&seanceTimeStamp=" + seanceTimeStamp + "&film_id=" + film_id + "&seanceDate=" + seanceDate)
         aTime.innerHTML = seances[a].seance_time;
         seancesId.appendChild(aTime);
       }

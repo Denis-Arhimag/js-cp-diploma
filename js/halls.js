@@ -2,9 +2,10 @@ window.addEventListener('load', async () => {
     const params = getUrlParams();
     const hall_id = params.get("hall_id")
     const seance_id = params.get("seance_id")
-    // const seance_start = params.get("seance_start")
     const film_id = params.get("film_id")
     const seanceTimeStamp = params.get("seanceTimeStamp")
+    const seanceDate = params.get("seanceDate")
+    console.log(seanceDate);
 
     const result = await loadHallConfig(hall_id, seance_id, seanceTimeStamp)
 
@@ -107,13 +108,13 @@ window.addEventListener('load', async () => {
                     }
                   })
                 
-                const chair = {row: row, place: place}; // обьек который будет хранить ряд и места
+                const chair = {row: row, place: place }; // обьек который будет хранить ряд и места
                
                 chairs.push(chair); 
             })
                 const r = await saleAdd(hall_id, seance_id, seanceTimeStamp, confStepWrapper.innerHTML)
                 console.log(r)
-                const ticketInformation = {film: film, seance: seance, hall: hall, selectedSeats: chairs, sum: sum}
+                const ticketInformation = {film: film, seance: seance, hall: hall, selectedSeats: chairs, sum: sum, seanceDate: seanceDate }
                 console.log(chairs);
                 window.sessionStorage.setItem("ticketInformation", JSON.stringify(ticketInformation))
                 window.open("payment.html", "_self")
@@ -126,4 +127,3 @@ window.addEventListener('load', async () => {
 function getUrlParams() {
     return new URLSearchParams(window.location.search);
 }
-
